@@ -1,0 +1,43 @@
+.subMenuBar {
+  border-top: 1px solid #eef1f5;
+  border-bottom: 1px solid #e7eaf0;
+  background-color: #ffffff;
+}
+
+.subMenuInner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 10px 24px;
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+}
+
+.subMenuPlaceholder {
+  width: 98px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px dashed #d2d8e2;
+  background-color: #fafbfd;
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+
+.subMenuItem {
+  min-width: 98px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid #d7ddea;
+  background-color: #ffffff;
+  color: #4b5563;
+  font-size: 13px;
+  padding: 0 14px;
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+
+.subMenuItemActive {
+  border-color: #111827;
+  color: #111827;
+  font-weight: 600;
+}

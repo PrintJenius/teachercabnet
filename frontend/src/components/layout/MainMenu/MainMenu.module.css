@@ -1,0 +1,35 @@
+.mainMenu {
+  height: 68px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  min-width: 0;
+}
+
+.menuItem {
+  height: 56px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #1f2937;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.menuItemActive {
+  border-bottom-color: #111827;
+}
+
+@media (max-width: 900px) {
+  .mainMenu {
+    height: 60px;
+    gap: 16px;
+    overflow-x: auto;
+  }
+
+  .menuItem {
+    font-size: 15px;
+  }
+}

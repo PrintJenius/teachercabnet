@@ -1,0 +1,367 @@
+.page {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 16px;
+  min-height: 520px;
+}
+
+.calendarPane,
+.contentPane {
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.calendarPane {
+  padding: 20px;
+}
+
+.calendarPane h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+  color: #111827;
+}
+
+.monthNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.monthNav button {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #111827;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.monthNav strong {
+  font-size: 14px;
+  color: #111827;
+}
+
+.weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.weekdays span {
+  text-align: center;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.dayCell {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #111827;
+  font-size: 12px;
+  height: 34px;
+  cursor: pointer;
+}
+
+.dayCell:hover {
+  background: #f9fafb;
+}
+
+.outsideMonth {
+  color: #9ca3af;
+  background: #f9fafb;
+}
+
+.selectedDay {
+  border-color: #111827;
+  background: #111827;
+  color: #fff;
+}
+
+.dateInput {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.contentPane {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+}
+
+.listWrap {
+  border-right: 1px solid #e5e7eb;
+  padding: 20px;
+}
+
+.listWrap h3,
+.editorWrap h3 {
+  margin: 0 0 12px;
+  font-size: 17px;
+  color: #111827;
+}
+
+.studentList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.studentButton {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  cursor: pointer;
+}
+
+.studentButton.active {
+  border-color: #111827;
+  background: #f9fafb;
+}
+
+.studentName {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.studentBirth {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.editorWrap {
+  padding: 20px;
+}
+
+.targetText {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: #374151;
+}
+
+.diaryBook {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fffdf8 0%, #fff9ef 100%);
+  border: 1px solid #eadfce;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+  max-height: 62vh;
+  overflow-y: auto;
+}
+
+.diaryBookReadonly {
+  background: linear-gradient(180deg, #fcfbfa 0%, #f8f6f3 100%);
+}
+
+.diaryEntry {
+  padding-bottom: 18px;
+  border-bottom: 1px dashed #e7d8c3;
+}
+
+.diaryEntry:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.diaryPhotoArea {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.diaryPhoto {
+  width: 100%;
+  max-height: 360px;
+  object-fit: cover;
+  display: block;
+}
+
+.diaryPhotoPlaceholder {
+  color: #9ca3af;
+  font-size: 14px;
+  padding: 24px;
+  text-align: center;
+}
+
+.photoUploadBtn {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.88);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.diaryMemoField {
+  display: block;
+  margin-top: 12px;
+}
+
+.diaryMemoField span {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: #6b4f2b;
+  font-weight: 600;
+}
+
+.diaryMemoField textarea {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid #d6c4a8;
+  border-radius: 0;
+  background: transparent;
+  padding: 8px 2px;
+  font-size: 15px;
+  line-height: 1.6;
+  resize: vertical;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.diaryMemoField textarea:focus {
+  outline: none;
+  border-bottom-color: #111827;
+}
+
+.diaryMemoReadonly {
+  margin-top: 12px;
+}
+
+.diaryMemoReadonly span {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: #6b4f2b;
+  font-weight: 600;
+}
+
+.diaryMemoReadonly p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #374151;
+  white-space: pre-wrap;
+}
+
+.removeEntryBtn {
+  margin-top: 8px;
+  border: 0;
+  background: transparent;
+  color: #b91c1c;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.diaryActions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.addEntryBtn {
+  border: 1px dashed #d1d5db;
+  border-radius: 10px;
+  background: #fff;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.saveBtn {
+  border: 0;
+  border-radius: 10px;
+  background: #111827;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.saveBtn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.info,
+.success,
+.error {
+  margin: 10px 0 0;
+  font-size: 13px;
+}
+
+.info {
+  color: #6b7280;
+}
+
+.success {
+  color: #065f46;
+}
+
+.error {
+  color: #b91c1c;
+}
+
+@media (max-width: 980px) {
+  .page {
+    grid-template-columns: 1fr;
+  }
+
+  .contentPane {
+    grid-template-columns: 1fr;
+  }
+
+  .listWrap {
+    border-right: 0;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+}

@@ -1,0 +1,145 @@
+.page {
+  min-height: 420px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background-color: #ffffff;
+  padding: 24px;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 22px;
+  color: #111827;
+}
+
+.form {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.profileSection {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.profileRing {
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  border: 1px solid #d1d5db;
+  background: #f3f4f6;
+  display: flex;
+  overflow: hidden;
+}
+
+.profileImage,
+.profileFallback,
+.profileEmpty {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 0;
+  background: transparent;
+}
+
+.profileImage {
+  object-fit: cover;
+}
+
+.profileFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  font-size: 34px;
+  line-height: 1;
+}
+
+.uploadButton {
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 12px;
+  color: #374151;
+  background: #fff;
+  cursor: pointer;
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.form label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form span {
+  font-size: 13px;
+  color: #374151;
+}
+
+.form input,
+.form select,
+.form textarea {
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #111827;
+  font-family: inherit;
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.successMessage,
+.errorMessage {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 13px;
+}
+
+.successMessage {
+  color: #065f46;
+}
+
+.errorMessage {
+  color: #b91c1c;
+}
+
+.actions button {
+  border: 0;
+  border-radius: 10px;
+  background: #111827;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.actions button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .form {
+    grid-template-columns: 1fr;
+  }
+}

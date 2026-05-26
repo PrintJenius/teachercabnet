@@ -1,0 +1,101 @@
+.page {
+  min-height: 100vh;
+  background-color: #f5f6f8;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 0 24px;
+  box-sizing: border-box;
+}
+
+.loginCard {
+  width: min(100%, 620px);
+  margin-left: 0;
+}
+
+.backButton {
+  border: 0;
+  background: transparent;
+  font-size: 36px;
+  line-height: 1;
+  color: #19243c;
+  cursor: pointer;
+  padding: 0 0 22px;
+}
+
+.hint {
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.inputLabel {
+  width: 100%;
+  border: 1px solid #d9dee6;
+  border-radius: 8px;
+  box-sizing: border-box;
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #f5f6f8;
+}
+
+.inputLabel span {
+  font-size: 11px;
+  color: #7f8ca4;
+}
+
+.inputLabel input {
+  border: 0;
+  outline: 0;
+  font-size: clamp(15px, 1.4vw, 19px);
+  color: #293142;
+  background: transparent;
+}
+
+.inputLabel input::placeholder {
+  color: #b9c0cb;
+}
+
+.errorMessage {
+  margin: 0;
+  font-size: 13px;
+  color: #b91c1c;
+}
+
+.loginButton {
+  margin-top: 8px;
+  height: 64px;
+  border-radius: 8px;
+  border: 0;
+  background: #efe8b7;
+  color: #293142;
+  font-size: clamp(16px, 1.5vw, 20px);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.loginButton:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 0 12px;
+  }
+
+  .loginCard {
+    width: 100%;
+    margin-left: 0;
+  }
+
+}

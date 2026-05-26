@@ -1,0 +1,200 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.header {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  padding: 14px 16px;
+}
+
+.header h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+.header p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  gap: 8px;
+}
+
+.steps li {
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #fff;
+  color: #6b7280;
+  text-align: center;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.steps li.active {
+  border-color: #111827;
+  color: #111827;
+  font-weight: 700;
+}
+
+.card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  padding: 14px 16px;
+}
+
+.card h3 {
+  margin: 0 0 8px;
+}
+
+.subTitle {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: #111827;
+}
+
+.field {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.field span {
+  display: block;
+  margin-bottom: 4px;
+  color: #374151;
+  font-size: 13px;
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+.guideList {
+  margin: 0 0 10px;
+  padding-left: 18px;
+}
+
+.guideList li {
+  margin-bottom: 6px;
+}
+
+.checkGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.checkline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.overrideWrap {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.studentPane,
+.overridePane {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.studentList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.studentButton {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #111827;
+  padding: 8px 10px;
+  text-align: left;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.activeStudentButton {
+  border-color: #111827;
+  background: #f3f4f6;
+  font-weight: 700;
+}
+
+.preview {
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 10px;
+  line-height: 1.5;
+  color: #374151;
+  margin: 10px 0;
+}
+
+.scoreList {
+  margin: 8px 0 12px;
+  padding-left: 18px;
+  color: #374151;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.card button {
+  border: 0;
+  border-radius: 8px;
+  background: #111827;
+  color: #fff;
+  padding: 8px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.card button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 980px) {
+  .steps {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .checkGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .overrideWrap {
+    grid-template-columns: 1fr;
+  }
+}

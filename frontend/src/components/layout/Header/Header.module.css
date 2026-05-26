@@ -1,0 +1,78 @@
+.topHeader {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e7eaf0;
+  box-shadow: 0 2px 8px rgba(17, 24, 39, 0.06);
+}
+
+.headerInner {
+  max-width: 1280px;
+  margin: 0 auto;
+  height: 68px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  min-width: 0;
+}
+
+.logoButton {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  font-size: 22px;
+  font-weight: 800;
+  color: #111827;
+  white-space: nowrap;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.logoButton:hover {
+  color: #374151;
+}
+
+.authActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.textAction,
+.filledAction {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.textAction {
+  color: #374151;
+  font-size: 14px;
+}
+
+.filledAction {
+  background-color: #111827;
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .headerInner {
+    height: 60px;
+  }
+
+  .headerLeft {
+    gap: 20px;
+  }
+}
