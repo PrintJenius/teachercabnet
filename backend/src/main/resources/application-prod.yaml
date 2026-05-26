@@ -1,0 +1,5 @@
+# Render 등 프로덕션: SPRING_PROFILES_ACTIVE=prod
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate

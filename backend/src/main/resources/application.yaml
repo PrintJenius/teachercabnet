@@ -1,0 +1,42 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  application:
+    name: server
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  sql:
+    init:
+      mode: never
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    open-in-view: false
+server:
+  port: ${PORT:8080}
+app:
+  frontend-origin: ${FRONTEND_ORIGIN:http://localhost:5173}
+  jwt:
+    secret: ${JWT_SECRET:change-me-use-at-least-32-characters-long!!}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  rag-server:
+    base-url: ${RAG_SERVER_BASE_URL:http://localhost:8001}
+    namespace: ${RAG_NAMESPACE:play_data}
+    top-k: ${RAG_TOP_K:5}
+  admin:
+    login-ids: ${ADMIN_LOGIN_IDS:admin}
+  storage:
+    local-dir: ${STORAGE_LOCAL_DIR:./storage}
+    public-url-prefix: ${STORAGE_PUBLIC_URL:http://localhost:8080}
+    upload-path-prefix: /uploads
