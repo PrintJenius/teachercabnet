@@ -321,7 +321,7 @@ crawler → media-text-pipeline → JSON/TXT → rag-ingest → Pinecone
 | `rag-server/.env.example` | Pinecone, Gemini, CORS |
 | `frontend/vite.config.js` | dev 프록시 |
 | `backend/.../SecurityConfig.java` | CORS 수정 대상 |
-| `sql/` | MySQL DDL 참고 |
+| `sql/select.sql` | Supabase에서 테이블 조회용 (스키마는 JPA) |
 
 ---
 

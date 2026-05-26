@@ -48,7 +48,7 @@ cd backend
 - Supabase 빈 DB에 Spring 1회 기동(스키마 생성) 후
 - MySQL → CSV/pgloader 등으로 이전, 또는 수동 재입력
 
-`sql/create.txt`는 **MySQL용 레거시** DDL입니다. Postgres는 JPA `ddl-auto=update`로 맞춥니다.
+스키마는 JPA `ddl-auto=update`로 맞춥니다. 데이터 확인은 `sql/select.sql`(Supabase SQL Editor용)을 참고하세요.
 
 ## 5. 운영(Render)
 
