@@ -1,8 +1,12 @@
 package com.teachercabinet.server.config;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -27,7 +31,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    private static final String LOCAL_DEV_ORIGIN = "http://localhost:5173";
+
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @Value("${app.frontend-origin:" + LOCAL_DEV_ORIGIN + "}")
+    private String frontendOrigin;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -45,10 +54,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
-                        .requestMatchers(
-                                "/auth/login",
-                                "/api/auth/login"
-                        ).permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(SecurityConfig::writeUnauthorized)
@@ -71,7 +77,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        configuration.setAllowedOrigins(corsAllowedOrigins());
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
@@ -80,5 +86,18 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    private List<String> corsAllowedOrigins() {
+        Set<String> origins = new LinkedHashSet<>();
+        origins.add(LOCAL_DEV_ORIGIN);
+        String configured = frontendOrigin == null ? "" : frontendOrigin.trim();
+        while (configured.endsWith("/")) {
+            configured = configured.substring(0, configured.length() - 1);
+        }
+        if (!configured.isEmpty()) {
+            origins.add(configured);
+        }
+        return new ArrayList<>(origins);
     }
 }
