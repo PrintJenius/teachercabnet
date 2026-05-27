@@ -34,6 +34,8 @@ app:
     base-url: ${RAG_SERVER_BASE_URL:http://localhost:8001}
     namespace: ${RAG_NAMESPACE:play_data}
     top-k: ${RAG_TOP_K:5}
+    wake-max-attempts: ${RAG_WAKE_MAX_ATTEMPTS:20}
+    wake-interval-ms: ${RAG_WAKE_INTERVAL_MS:3000}
   admin:
     login-ids: ${ADMIN_LOGIN_IDS:admin}
   storage:

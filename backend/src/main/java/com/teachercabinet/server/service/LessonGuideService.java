@@ -4,10 +4,12 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,11 +29,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class LessonGuideService {
     private static final Logger log = LoggerFactory.getLogger(LessonGuideService.class);
+    private static final Set<Integer> RAG_ASK_RETRY_STATUSES = Set.of(502, 503, 504);
+    private static final int RAG_ASK_MAX_ATTEMPTS = 2;
 
     private final ObjectMapper objectMapper;
     private final LessonActivityService lessonActivityService;
     private final HttpClient httpClient = HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_1_1)
+            .connectTimeout(Duration.ofSeconds(15))
             .build();
 
     @Value("${app.rag-server.base-url:http://localhost:8001}")
@@ -42,6 +47,12 @@ public class LessonGuideService {
 
     @Value("${app.rag-server.top-k:5}")
     private int ragTopK;
+
+    @Value("${app.rag-server.wake-max-attempts:20}")
+    private int ragWakeMaxAttempts;
+
+    @Value("${app.rag-server.wake-interval-ms:3000}")
+    private long ragWakeIntervalMs;
 
     public LessonGuideAskResponse ask(Long teacherId, String question) {
         String trimmed = question == null ? "" : question.trim();
@@ -78,33 +89,8 @@ public class LessonGuideService {
 
     private JsonNode callRagAsk(String question) {
         try {
-            Map<String, Object> payload = new LinkedHashMap<>();
-            payload.put("question", question);
-            payload.put("namespace", ragNamespace);
-            payload.put("top_k", ragTopK);
-            payload.put("include_answer", true);
-
-            String body = objectMapper.writeValueAsString(payload);
-            String endpoint = ragBaseUrl.replaceAll("/+$", "") + "/api/ask";
-            log.info("[RAG] request endpoint={}, namespace={}, questionLength={}",
-                    endpoint, ragNamespace, question.length());
-
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(endpoint))
-                    .header("Content-Type", "application/json")
-                    .header("Accept", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(body))
-                    .build();
-
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            log.info("[RAG] response status={}", response.statusCode());
-
-            if (response.statusCode() != 200) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_GATEWAY,
-                        formatRagFailure(response.statusCode(), response.body(), objectMapper));
-            }
-            return objectMapper.readTree(response.body());
+            ensureRagReady();
+            return postRagAskWithRetry(question);
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
@@ -112,6 +98,110 @@ public class LessonGuideService {
                     HttpStatus.BAD_GATEWAY,
                     "자료 검색 요청 중 오류: " + e.getMessage());
         }
+    }
+
+    /** Render cold start: /health 폴링으로 RAG 기동·ready 확인 */
+    private void ensureRagReady() {
+        String healthUrl = normalizedRagBaseUrl() + "/health";
+        int maxAttempts = Math.max(1, ragWakeMaxAttempts);
+        long intervalMs = Math.max(500L, ragWakeIntervalMs);
+
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(healthUrl))
+                        .timeout(Duration.ofSeconds(15))
+                        .GET()
+                        .build();
+                HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                if (response.statusCode() == 200) {
+                    if (attempt > 1) {
+                        log.info("[RAG] health ready after {} attempt(s)", attempt);
+                    }
+                    return;
+                }
+                log.info("[RAG] health status={}, attempt={}/{}", response.statusCode(), attempt, maxAttempts);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_GATEWAY,
+                        "자료 검색 서버 준비가 중단되었습니다.");
+            } catch (Exception e) {
+                log.info("[RAG] health unreachable, attempt={}/{}: {}", attempt, maxAttempts, e.getMessage());
+            }
+
+            if (attempt < maxAttempts) {
+                try {
+                    Thread.sleep(intervalMs);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_GATEWAY,
+                            "자료 검색 서버 준비가 중단되었습니다.");
+                }
+            }
+        }
+
+        throw new ResponseStatusException(
+                HttpStatus.BAD_GATEWAY,
+                "자료 검색 서버를 준비하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+    }
+
+    private JsonNode postRagAskWithRetry(String question) throws Exception {
+        ResponseStatusException lastFailure = null;
+
+        for (int attempt = 1; attempt <= RAG_ASK_MAX_ATTEMPTS; attempt++) {
+            HttpResponse<String> response = postRagAsk(question);
+            int status = response.statusCode();
+            if (status == 200) {
+                return objectMapper.readTree(response.body());
+            }
+
+            lastFailure = new ResponseStatusException(
+                    HttpStatus.BAD_GATEWAY,
+                    formatRagFailure(status, response.body(), objectMapper));
+
+            if (!RAG_ASK_RETRY_STATUSES.contains(status) || attempt >= RAG_ASK_MAX_ATTEMPTS) {
+                throw lastFailure;
+            }
+
+            log.warn("[RAG] ask status={}, re-warming via health (attempt {}/{})",
+                    status, attempt, RAG_ASK_MAX_ATTEMPTS);
+            ensureRagReady();
+        }
+
+        throw lastFailure != null
+                ? lastFailure
+                : new ResponseStatusException(HttpStatus.BAD_GATEWAY, "자료 검색 요청에 실패했습니다.");
+    }
+
+    private HttpResponse<String> postRagAsk(String question) throws Exception {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("question", question);
+        payload.put("namespace", ragNamespace);
+        payload.put("top_k", ragTopK);
+        payload.put("include_answer", true);
+
+        String body = objectMapper.writeValueAsString(payload);
+        String endpoint = normalizedRagBaseUrl() + "/api/ask";
+        log.info("[RAG] request endpoint={}, namespace={}, questionLength={}",
+                endpoint, ragNamespace, question.length());
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(endpoint))
+                .timeout(Duration.ofSeconds(120))
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        log.info("[RAG] response status={}", response.statusCode());
+        return response;
+    }
+
+    private String normalizedRagBaseUrl() {
+        return ragBaseUrl.replaceAll("/+$", "");
     }
 
     private static String formatRagFailure(int statusCode, String body, ObjectMapper objectMapper) {
