@@ -29,7 +29,7 @@ async function wakeRagServerOnce() {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 20000)
   try {
-    const res = await fetch(`${RAG_BASE_URL}/health`, {
+    const res = await fetch(`${RAG_BASE_URL}/wake`, {
       method: 'GET',
       signal: controller.signal,
     })

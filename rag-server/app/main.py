@@ -47,6 +47,15 @@ def health() -> HealthResponse:
     )
 
 
+@app.get("/wake", response_model=HealthResponse)
+def wake() -> HealthResponse:
+    """광고 차단 우회를 위한 워밍업 엔드포인트 (health와 동일 응답)."""
+    return HealthResponse(
+        index=settings.pinecone_index,
+        namespace=settings.pinecone_namespace,
+    )
+
+
 @app.post("/api/ask", response_model=AskResponse)
 def api_ask(body: AskRequest) -> AskResponse:
     """질문 → (선택) Gemini 답변 + 참고자료 카드(title, description, url)."""
