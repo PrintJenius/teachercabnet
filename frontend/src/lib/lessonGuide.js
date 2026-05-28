@@ -2,6 +2,8 @@ import { authHeaders, hasAccessToken } from './auth'
 import { createApiError, parseResponseBody } from './apiError'
 import { publicDataType } from './materialMeta'
 
+const RAG_BASE_URL = (import.meta.env.VITE_RAG_BASE_URL || 'https://rag-96i6.onrender.com').replace(/\/+$/, '')
+
 function normalizeReferencePage(page) {
   const n = Number(page)
   return Number.isFinite(n) && n > 0 ? n : null
@@ -23,12 +25,39 @@ function lessonGuideErrorMessage(status) {
   return `자료 찾기 요청에 실패했습니다. (HTTP ${status})`
 }
 
+async function wakeRagServerOnce() {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 20000)
+  try {
+    const res = await fetch(`${RAG_BASE_URL}/health`, {
+      method: 'GET',
+      signal: controller.signal,
+    })
+    if (!res.ok) {
+      const err = new Error(lessonGuideErrorMessage(res.status))
+      err.status = res.status
+      throw err
+    }
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      const err = new Error('자료 검색 서버를 깨우는 중입니다. 잠시 후 다시 시도해 주세요.')
+      err.status = 504
+      throw err
+    }
+    throw error
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
 export async function askLessonGuide(question) {
   if (!hasAccessToken()) {
     const err = new Error('로그인이 필요합니다. 다시 로그인해 주세요.')
     err.status = 401
     throw err
   }
+  await wakeRagServerOnce()
+
   const res = await fetch('/api/lesson-guides/ask', {
     method: 'POST',
     headers: authHeaders({ 'Content-Type': 'application/json' }),
