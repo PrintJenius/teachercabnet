@@ -61,8 +61,9 @@ export function extractErrorMessage(res, data) {
 }
 
 /** fetch 응답이 실패일 때 Error 생성 */
-export function createApiError(res, data) {
-  if (res.status === 401) {
+export function createApiError(res, data, options = {}) {
+  const { notifyOn401 = true } = options
+  if (notifyOn401 && res.status === 401) {
     notifySessionExpired()
   }
   const err = new Error(extractErrorMessage(res, data))
