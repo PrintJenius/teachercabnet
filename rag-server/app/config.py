@@ -33,7 +33,10 @@ class Settings(BaseSettings):
     top_k: int = 5
     min_reference_score: float = 0.72
 
-    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+    cors_origins: str = (
+        "https://teachercabinet.onrender.com,"
+        "http://localhost:5173,http://127.0.0.1:5173"
+    )
     description_max_chars: int = 280
 
     @property
