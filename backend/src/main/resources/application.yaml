@@ -34,8 +34,6 @@ app:
     base-url: ${RAG_SERVER_BASE_URL:http://localhost:8001}
     namespace: ${RAG_NAMESPACE:play_data}
     top-k: ${RAG_TOP_K:5}
-    # Render cold start: health 1회 요청, 응답까지 최대 대기(초). curl과 같이 재전송 폴링 없음.
-    wake-timeout-seconds: ${RAG_WAKE_TIMEOUT_SECONDS:120}
   admin:
     login-ids: ${ADMIN_LOGIN_IDS:admin}
   storage:

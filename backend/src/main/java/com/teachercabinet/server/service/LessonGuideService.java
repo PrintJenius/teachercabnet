@@ -47,9 +47,6 @@ public class LessonGuideService {
     @Value("${app.rag-server.top-k:5}")
     private int ragTopK;
 
-    @Value("${app.rag-server.wake-timeout-seconds:120}")
-    private int ragWakeTimeoutSeconds;
-
     public LessonGuideAskResponse ask(Long teacherId, String question) {
         String trimmed = question == null ? "" : question.trim();
         if (trimmed.isEmpty()) {
@@ -85,7 +82,6 @@ public class LessonGuideService {
 
     private JsonNode callRagAsk(String question) {
         try {
-            ensureRagReady();
             HttpResponse<String> response = postRagAsk(question);
             int status = response.statusCode();
             if (status == 200) {
@@ -104,39 +100,6 @@ public class LessonGuideService {
             throw new ResponseStatusException(
                     HttpStatus.BAD_GATEWAY,
                     "자료 검색 요청 중 오류: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Render cold start: /health 1회만 호출하고 응답까지 대기(curl과 동일, 재전송 폴링 없음).
-     */
-    private void ensureRagReady() throws Exception {
-        int timeoutSeconds = Math.max(30, ragWakeTimeoutSeconds);
-        String healthUrl = normalizedRagBaseUrl() + "/health";
-        log.info("[RAG] health wait (single request, up to {}s): {}", timeoutSeconds, healthUrl);
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(healthUrl))
-                .timeout(Duration.ofSeconds(timeoutSeconds))
-                .header("Accept", "application/json")
-                .GET()
-                .build();
-
-        try {
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() == 200) {
-                log.info("[RAG] health ready");
-                return;
-            }
-            log.warn("[RAG] health status={}", response.statusCode());
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_GATEWAY,
-                    formatRagFailure(response.statusCode(), response.body(), objectMapper));
-        } catch (HttpTimeoutException e) {
-            log.warn("[RAG] health timed out after {}s", timeoutSeconds);
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_GATEWAY,
-                    "자료 검색 서버가 " + timeoutSeconds + "초 안에 준비되지 않았습니다. 잠시 후 다시 시도해 주세요.");
         }
     }
 
