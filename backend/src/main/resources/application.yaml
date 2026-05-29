@@ -3,6 +3,8 @@ spring:
     import: optional:file:.env[.properties]
   application:
     name: server
+  main:
+    lazy-initialization: true
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
