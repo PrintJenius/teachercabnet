@@ -41,6 +41,9 @@ app:
     top-k: ${RAG_TOP_K:5}
   admin:
     login-ids: ${ADMIN_LOGIN_IDS:admin}
+    bootstrap-login-id: ${ADMIN_BOOTSTRAP_LOGIN_ID:}
+    bootstrap-password: ${ADMIN_BOOTSTRAP_PASSWORD:}
+    bootstrap-nickname: ${ADMIN_BOOTSTRAP_NICKNAME:관리자}
   storage:
     local-dir: ${STORAGE_LOCAL_DIR:./storage}
     public-url-prefix: ${STORAGE_PUBLIC_URL:http://localhost:8080}

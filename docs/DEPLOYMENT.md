@@ -136,6 +136,9 @@ SPRING_DATASOURCE_PASSWORD=<from Supabase>
 | `JWT_EXPIRATION_MS` | `86400000` |
 | `FRONTEND_ORIGIN` | `https://app.example.com` |
 | `ADMIN_LOGIN_IDS` | `admin` (쉼표 구분) |
+| `ADMIN_BOOTSTRAP_LOGIN_ID` | 최초 1회 관리자 생성용 loginId (이미 있으면 무시). **운영에서는 생성 후 비우기 권장** |
+| `ADMIN_BOOTSTRAP_PASSWORD` | 최초 1회 관리자 비밀번호 (Render env에만, 레포에 커밋 금지) |
+| `ADMIN_BOOTSTRAP_NICKNAME` | (선택) 기본 `관리자` |
 | `RAG_SERVER_BASE_URL` | `https://teachercabinet-rag.onrender.com` |
 | `RAG_NAMESPACE` | `play_data` |
 | `RAG_TOP_K` | `5` |
@@ -261,7 +264,7 @@ frontend/dist
 
 ### 7.2 기능
 
-- [ ] 관리자 로그인 (`admin` / 초기 비밀번호 — `AdminAccountInitializer` 확인)
+- [ ] 관리자 로그인 (`ADMIN_BOOTSTRAP_*` 또는 수동 생성 계정, 비밀번호는 Render env에만 설정)
 - [ ] 원아 등록·일지 작성·이미지 업로드
 - [ ] 수업 가이드 질문 (`/api/lesson-guides/ask` → rag-server)
 - [ ] 업로드 URL이 브라우저에서 열림 (Storage 또는 `/uploads` 프록시)

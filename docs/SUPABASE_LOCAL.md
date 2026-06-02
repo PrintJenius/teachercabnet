@@ -39,7 +39,7 @@ cd backend
 
 첫 기동 시 `JPA_DDL_AUTO=update`로 테이블이 Supabase에 생성됩니다.
 
-- 기본 관리자: `admin` / `admin1234` (없을 때만 자동 생성)
+- 기본 관리자: `backend/.env`의 `ADMIN_BOOTSTRAP_*` 값으로 없을 때만 자동 생성 (예시는 `.env.example` 참고)
 
 ## 4. MySQL 데이터 이전 (선택)
 
