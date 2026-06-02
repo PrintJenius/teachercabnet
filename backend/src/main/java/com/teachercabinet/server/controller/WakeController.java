@@ -5,7 +5,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.teachercabinet.server.dto.HealthResponse;
 
+import lombok.extern.slf4j.Slf4j;
+
 @RestController
+@Slf4j
 public class WakeController {
 
     @GetMapping("/health")
@@ -15,6 +18,7 @@ public class WakeController {
 
     @GetMapping("/wake")
     public HealthResponse wake() {
+        log.info("GET /wake");
         return ok();
     }
 
