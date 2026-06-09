@@ -1,6 +1,9 @@
 package com.teachercabinet.server.controller;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.teachercabinet.server.dto.HealthResponse;
@@ -17,9 +20,15 @@ public class WakeController {
     }
 
     @GetMapping("/wake")
-    public HealthResponse wake() {
+    public HealthResponse wakeGet() {
         log.info("GET /wake");
         return ok();
+    }
+
+    @RequestMapping(value = "/wake", method = RequestMethod.HEAD)
+    public ResponseEntity<Void> wakeHead() {
+        log.info("HEAD /wake");
+        return ResponseEntity.ok().build();
     }
 
     private static HealthResponse ok() {

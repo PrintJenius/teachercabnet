@@ -1,7 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
@@ -47,13 +47,24 @@ def health() -> HealthResponse:
     )
 
 
-@app.get("/wake", response_model=HealthResponse)
-def wake() -> HealthResponse:
-    """광고 차단 우회를 위한 워밍업 엔드포인트 (health와 동일 응답)."""
+def _wake_health_response() -> HealthResponse:
     return HealthResponse(
         index=settings.pinecone_index,
         namespace=settings.pinecone_namespace,
     )
+
+
+@app.get("/wake", response_model=HealthResponse)
+def wake_get() -> HealthResponse:
+    """UptimeRobot·워밍업용 (health와 동일 응답)."""
+    logger.info("GET /wake")
+    return _wake_health_response()
+
+
+@app.head("/wake")
+def wake_head() -> Response:
+    logger.info("HEAD /wake")
+    return Response(status_code=200)
 
 
 @app.post("/api/ask", response_model=AskResponse)
