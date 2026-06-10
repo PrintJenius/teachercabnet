@@ -16,15 +16,19 @@ function formatAnswerText(text) {
   return text.replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*\*/g, '')
 }
 
+const NOT_FOUND_ANSWERS = [
+  '제공된 자료에서 확인되지 않습니다.',
+  '관련 놀이 자료를 찾지 못했습니다. 다른 키워드로 질문해 보세요.',
+]
+
 function shouldShowReferences(answer, references) {
   if (!references?.length || !answer?.trim()) {
     return false
   }
-  const denied =
-    answer.includes('제공된 자료에서 확인되지 않습니다') ||
-    answer.includes('관련 놀이 자료를 찾지 못했습니다') ||
-    answer.includes('관련 자료를 찾지 못했습니다')
-  return !denied
+  const trimmed = answer.trim()
+  return !NOT_FOUND_ANSWERS.some(
+    (msg) => trimmed === msg || trimmed.startsWith('관련 놀이 자료를 찾지 못했습니다'),
+  )
 }
 
 function hasDisplayPage(page) {

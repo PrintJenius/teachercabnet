@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 import re
 import textwrap
@@ -20,19 +21,23 @@ from app.schemas import AskResponse, ReferenceCard
 
 SYSTEM_PROMPT = """당신은 i누리 유아 놀이·수업 자료 검색을 돕는 한국어 어시스턴트입니다.
 규칙:
-1. 검색된 자료(놀이 활동, 준비물, 실행 단계)에 근거가 있을 때만 추천하세요.
-2. 질문과 무관하거나 자료에 없으면 반드시 "제공된 자료에서 확인되지 않습니다." 한 문장만 답하세요. 추측하지 마세요.
+1. 아래 자료는 이미 질문과 관련 있다고 선별되었습니다. 자료(놀이 활동, 준비물, 실행 단계)에 근거해 추천하세요.
+2. 자료에 없는 내용을 추측하지 마세요.
 3. 놀이·활동 중심으로 간결하게 답하세요.
 4. 나이·연령으로 자료를 거르거나 추천하지 마세요.
 5. 마크다운 기호를 쓰지 마세요. **, #, - 목록 기호 대신 일반 문장·번호(1. 2.)만 사용하세요.
-6. 답변 항목 개수는 아래 [자료 N] 개수와 같게 하세요. 같은 자료를 두 항목으로 나누지 마세요. 자료에 없는 놀이를 지어내지 마세요.
+6. 자료마다 1개 항목만 소개하세요. 같은 자료를 두 항목으로 나누지 마세요. 자료에 없는 놀이를 지어내지 마세요.
 """
 
-NOT_FOUND_MARKERS = (
-    "제공된 자료에서 확인되지 않습니다",
-    "관련 자료를 찾지 못했습니다",
-    "관련 놀이 자료를 찾지 못했습니다",
-)
+RELEVANCE_FILTER_PROMPT = """당신은 i누리 유아 놀이·수업 자료 검색 결과를 걸러주는 심사자입니다.
+규칙:
+1. 사용자 질문의 의도(활동 주제, 준비물, 영역 등)에 실제로 맞는 자료 번호만 고르세요.
+2. 단어 하나(예: '컵')만 겹치고 질문의 핵심 주제(예: '음악')와 무관하면 제외하세요.
+3. 관련 자료가 없으면 빈 배열을 반환하세요.
+4. JSON만 출력하세요. 형식: {"relevant": [1, 3]} 또는 {"relevant": []}
+"""
+
+NOT_FOUND_ANSWER = "관련 놀이 자료를 찾지 못했습니다. 다른 키워드로 질문해 보세요."
 
 
 @lru_cache
@@ -156,7 +161,143 @@ def _group_matches(matches: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 def _answer_indicates_no_material(answer: str) -> bool:
     text = (answer or "").strip()
-    return any(marker in text for marker in NOT_FOUND_MARKERS)
+    if not text:
+        return True
+    if text == NOT_FOUND_ANSWER:
+        return True
+    if text in ("제공된 자료에서 확인되지 않습니다.", "제공된 자료에서 확인되지 않습니다"):
+        return True
+    if text.startswith("관련 놀이 자료를 찾지 못했습니다"):
+        return True
+    return False
+
+
+def _strip_json_fence(text: str) -> str:
+    cleaned = (text or "").strip()
+    cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\s*```$", "", cleaned)
+    return cleaned.strip()
+
+
+def _parse_relevance_indices(text: str) -> list[int]:
+    cleaned = _strip_json_fence(text)
+    data = json.loads(cleaned)
+    relevant = data.get("relevant", [])
+    if not isinstance(relevant, list):
+        return []
+    indices: list[int] = []
+    for item in relevant:
+        if isinstance(item, bool):
+            continue
+        if isinstance(item, int):
+            indices.append(item)
+        elif isinstance(item, float) and item == int(item):
+            indices.append(int(item))
+    return sorted({idx for idx in indices if idx > 0})
+
+
+def _generate_with_system_prompt(system_prompt: str, user_prompt: str) -> str:
+    """Gemini 호출 공통 래퍼 (답변·관련성 필터 등)."""
+    primary = (settings.chat_model or "").strip()
+    fallback = (settings.chat_model_fallback or "").strip()
+    models: list[str] = []
+    for name in (primary, fallback):
+        if name and name not in models:
+            models.append(name)
+    if not models:
+        raise RuntimeError("CHAT_MODEL이 설정되지 않았습니다.")
+
+    client = _gemini_client()
+    config = types.GenerateContentConfig(
+        system_instruction=system_prompt,
+        temperature=0.1,
+    )
+    last_error: Exception | None = None
+    max_retries = max(0, settings.chat_retry_on_server_error)
+
+    for model in models:
+        for attempt in range(max_retries + 1):
+            try:
+                resp = client.models.generate_content(
+                    model=model,
+                    contents=user_prompt,
+                    config=config,
+                )
+                text = _extract_answer_text(resp)
+                if text:
+                    return text
+                logger.warning("Gemini empty text model=%s", model)
+                last_error = RuntimeError("Gemini가 빈 응답을 반환했습니다.")
+                break
+            except genai_errors.ServerError as e:
+                last_error = e
+                logger.warning(
+                    "Gemini ServerError model=%s attempt=%s: %s",
+                    model,
+                    attempt + 1,
+                    e,
+                )
+                if attempt < max_retries:
+                    time.sleep(0.8 * (attempt + 1))
+                    continue
+                break
+            except genai_errors.ClientError as e:
+                last_error = e
+                logger.warning("Gemini ClientError model=%s: %s", model, e)
+                break
+            except Exception as e:
+                last_error = e
+                logger.warning("Gemini error model=%s: %s", model, e)
+                break
+
+    detail = str(last_error) if last_error else "unknown"
+    raise RuntimeError(
+        f"Gemini 요청 실패 (시도한 모델: {', '.join(models)}). {detail}"
+    ) from last_error
+
+
+def _filter_relevant_to_question(
+    question: str,
+    grouped: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """벡터 검색 후보 중 질문과 실제로 관련 있는 자료만 남긴다."""
+    if not grouped:
+        return []
+
+    blocks: list[str] = []
+    for i, match in enumerate(grouped, start=1):
+        meta = match.get("metadata") or {}
+        title = _pick_title(meta)
+        desc = _truncate(_pick_description(meta) or str(meta.get("text") or ""), 200)
+        blocks.append(f"[{i}] {title}\n{desc}")
+
+    user_prompt = textwrap.dedent(
+        f"""\
+        질문: {question}
+
+        후보 자료:
+        {chr(10).join(blocks)}
+
+        관련 있는 자료 번호만 JSON으로 반환하세요.""",
+    )
+
+    try:
+        raw = _generate_with_system_prompt(RELEVANCE_FILTER_PROMPT, user_prompt)
+        indices = _parse_relevance_indices(raw)
+        if not indices:
+            logger.info("relevance filter: no matches for questionLength=%s", len(question))
+            return []
+        selected = [grouped[i - 1] for i in indices if i <= len(grouped)]
+        logger.info(
+            "relevance filter: kept %s/%s indices=%s",
+            len(selected),
+            len(grouped),
+            indices,
+        )
+        return selected
+    except Exception as e:
+        logger.warning("relevance filter failed, using all matches: %s", e)
+        return grouped
 
 
 def _extract_answer_text(resp: Any) -> str:
@@ -223,62 +364,8 @@ def matches_to_cards(
 
 def _generate_chat_answer(user_prompt: str) -> str:
     """Gemini 답변 생성. 주 모델 실패 시 fallback 모델로 재시도."""
-    primary = (settings.chat_model or "").strip()
-    fallback = (settings.chat_model_fallback or "").strip()
-    models: list[str] = []
-    for name in (primary, fallback):
-        if name and name not in models:
-            models.append(name)
-    if not models:
-        raise RuntimeError("CHAT_MODEL이 설정되지 않았습니다.")
-
-    client = _gemini_client()
-    config = types.GenerateContentConfig(
-        system_instruction=SYSTEM_PROMPT,
-        temperature=0.2,
-    )
-    last_error: Exception | None = None
-    max_retries = max(0, settings.chat_retry_on_server_error)
-
-    for model in models:
-        for attempt in range(max_retries + 1):
-            try:
-                resp = client.models.generate_content(
-                    model=model,
-                    contents=user_prompt,
-                    config=config,
-                )
-                text = _plain_text_answer(_extract_answer_text(resp))
-                if text:
-                    return text
-                logger.warning("Gemini empty text model=%s", model)
-                last_error = RuntimeError("Gemini가 빈 답변을 반환했습니다.")
-                break
-            except genai_errors.ServerError as e:
-                last_error = e
-                logger.warning(
-                    "Gemini ServerError model=%s attempt=%s: %s",
-                    model,
-                    attempt + 1,
-                    e,
-                )
-                if attempt < max_retries:
-                    time.sleep(0.8 * (attempt + 1))
-                    continue
-                break
-            except genai_errors.ClientError as e:
-                last_error = e
-                logger.warning("Gemini ClientError model=%s: %s", model, e)
-                break
-            except Exception as e:
-                last_error = e
-                logger.warning("Gemini error model=%s: %s", model, e)
-                break
-
-    detail = str(last_error) if last_error else "unknown"
-    raise RuntimeError(
-        f"Gemini 답변 생성 실패 (시도한 모델: {', '.join(models)}). {detail}"
-    ) from last_error
+    text = _generate_with_system_prompt(SYSTEM_PROMPT, user_prompt)
+    return _plain_text_answer(text)
 
 
 def _build_context_block(matches: list[dict[str, Any]]) -> str:
@@ -304,7 +391,8 @@ def search(
     matches = _store().query(vector=vec, top_k=k, namespace=ns)
     matches = _filter_matches_by_score(matches)
     grouped = _group_matches(matches)
-    return matches_to_cards(grouped)
+    filtered = _filter_relevant_to_question(query, grouped)
+    return matches_to_cards(filtered)
 
 
 def ask(
@@ -319,26 +407,32 @@ def ask(
     matches = _store().query(vector=vec, top_k=k, namespace=ns)
     matches = _filter_matches_by_score(matches)
     grouped = _group_matches(matches)
-    references = matches_to_cards(grouped)
 
-    if not references:
+    if not grouped:
         return AskResponse(
-            answer="관련 놀이 자료를 찾지 못했습니다. 다른 키워드로 질문해 보세요."
-            if include_answer
-            else None,
+            answer=NOT_FOUND_ANSWER if include_answer else None,
             references=[],
         )
+
+    filtered = _filter_relevant_to_question(question, grouped)
+
+    if not filtered:
+        return AskResponse(
+            answer=NOT_FOUND_ANSWER if include_answer else None,
+            references=[],
+        )
+
+    references = matches_to_cards(filtered)
 
     if not include_answer:
         return AskResponse(answer=None, references=references)
 
-    n_refs = len(grouped)
-    context_block = _build_context_block(grouped)
+    n_refs = len(filtered)
+    context_block = _build_context_block(filtered)
     user_prompt = textwrap.dedent(
         f"""\
-        아래는 검색된 놀이·수업 자료 {n_refs}건입니다. [자료 1]~[자료 {n_refs}] 각각 1개 놀이만 소개하세요.
-        답변도 {n_refs}개 항목(1. 2. …)으로 맞추고, 같은 자료를 두 번 쓰지 마세요.
-        질문과 무관하거나 자료에 없으면 "제공된 자료에서 확인되지 않습니다."만 출력하세요.
+        아래는 질문과 관련된 놀이·수업 자료 {n_refs}건입니다. 각 자료당 1개 놀이만 소개하세요.
+        답변은 1. 2. … 번호로 자료 개수에 맞게 작성하세요.
 
         ===== 자료 =====
         {context_block}
